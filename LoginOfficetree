@@ -1,0 +1,200 @@
+package com.officetree.fragment
+
+import android.app.AlertDialog
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
+import android.util.Log
+import android.util.Patterns
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.widget.AppCompatButton
+import com.google.android.material.snackbar.Snackbar
+import com.officetree.R
+import com.officetree.base.BaseFragment
+import com.officetree.databinding.FragmentAuthLoginBinding
+import com.officetree.model.*
+import com.officetree.network.NetworkHelper.api
+import com.officetree.pref
+import com.officetree.utils.Utils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+
+class AuthLoginFragment : BaseFragment() {
+    private lateinit var binding: FragmentAuthLoginBinding
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentAuthLoginBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.root.setOnClickListener {
+            //getBaseActivity().hideKeyBoard()
+            /*val inputMethodManager = requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)*/
+        }
+
+        if (pref.isTablet) {
+            binding.imageViewLogo.layoutParams.height = 170
+            binding.imageViewLogo.layoutParams.width = 450
+        }
+
+        binding.buttonLogin.setOnClickListener {
+            loadActivity()
+            //Toast.makeText(requireContext(), "Hello", Toast.LENGTH_SHORT).show()
+            if (validation()) {
+
+             //   loginDetails()
+
+            }
+
+
+        }
+
+        binding.imageViewPasswordOn.setOnClickListener {
+            passwordButtonHideShow()
+        }
+
+        binding.textViewDontAc.setOnClickListener {
+            val alertDialog = AlertDialog.Builder(context, R.style.CustomAlertDialog)
+            val customLayout: View =
+                layoutInflater.inflate(R.layout.custom_dialogbox, null)
+            val btnOk: AppCompatButton = customLayout.findViewById(R.id.btnOk)
+            val btnCancel: AppCompatButton =
+                customLayout.findViewById(R.id.btnCancel)
+            alertDialog.setView(customLayout)
+
+            val alert = alertDialog.create()
+            btnOk.setOnClickListener {
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.officetree.com/phone")
+                    )
+                )
+                alert.dismiss()
+            }
+            btnCancel.setOnClickListener {
+                alert.dismiss()
+            }
+            alert.setCanceledOnTouchOutside(false)
+            alert.show()
+        }
+
+    }
+
+    private fun loadActivity() {
+        getNavigation().addHomeActivity(requireActivity())
+    }
+
+    private fun passwordButtonHideShow() {
+        binding.apply {
+            imageViewPasswordOn.isSelected = !imageViewPasswordOn.isSelected
+            if (imageViewPasswordOn.isSelected) {
+                editTextPassword.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                editTextPassword.setSelection(editTextPassword.text.toString().length)
+                imageViewPasswordOn.setImageResource(R.drawable.ic_icon_feather_eye_off)
+            } else {
+                editTextPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                editTextPassword.setSelection(editTextPassword.text.toString().length)
+                imageViewPasswordOn.setImageResource(R.drawable.ic_icon_feather_eye_on)
+            }
+        }
+    }
+
+    private fun validation(): Boolean {
+        binding.apply {
+            if (editTextEmail.text!!.trim().isEmpty()) {
+                editTextEmail.requestFocus()
+                Utils.showSnackBar(root, "Please enter your email address.")
+                //  getBaseActivity().showSnackBar("Please enter your email address.")
+                //Snackbar.make(root, "My Message", Snackbar.LENGTH_LONG).show()
+                return false
+            } else if (!editTextEmail.text.toString().matches(Patterns.EMAIL_ADDRESS.pattern().toRegex())
+            ) {
+                Utils.showSnackBar(root, "Please enter a valid email address.")
+                return false
+
+            } else if (editTextPassword.text!!.trim().toString().isEmpty()) {
+                // getBaseActivity().showSnackBar("Please enter your password.")
+                Utils.showSnackBar(root, "Please enter your password.")
+                return false
+
+            } else {
+                return true
+            }
+        }
+
+    }
+
+    private fun loginDetails() {
+        binding.apply {
+            if (validation()) {
+                progressLoader.visibility = View.VISIBLE
+                if (Utils.isInternetAvailable(requireContext())) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        val user = RequestData(
+                            userName = editTextEmail.text.toString().trim(),
+                            password = editTextPassword.text.toString().trim()
+                        )
+
+                        val userCall: Call<CommonResponse<OfficeTreeUser>?>? = api.login(user)
+                        userCall!!.enqueue(object : Callback<CommonResponse<OfficeTreeUser>?> {
+                            override fun onResponse(
+                                call: Call<CommonResponse<OfficeTreeUser>?>,
+                                response: Response<CommonResponse<OfficeTreeUser>?>
+                            ) {
+                                if (response.code() == 200) {
+                                    Log.e(">>> success200", "onResponse: ${response.body()}")
+                                    pref.responseString = response.body().toString()
+                                    pref.deviceToken = response.body()!!.response!!.token
+                                    //   getNavigation().addJsonFragment(JsonResponceFragment())
+
+                                }
+                                Log.e(">>> success", "onResponse: $response")
+                            }
+
+                            override fun onFailure(
+                                call: Call<CommonResponse<OfficeTreeUser>?>,
+                                t: Throwable
+                            ) {
+                                Log.e(">>>>>>>>>>>", t.toString())
+                            }
+
+                        })
+                    }
+                } else {
+                    progressLoader.visibility = View.GONE
+                    val snack: Snackbar =
+                        Snackbar.make(
+                            binding.root,
+                            "No internet connection",
+                            Snackbar.LENGTH_LONG
+                        )
+
+                    val snackView = snack.view
+                    snackView.setBackgroundColor(Color.RED)
+                    snack.show()
+                }
+            }
+        }
+
+    }
+}
