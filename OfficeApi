@@ -1,0 +1,35 @@
+package com.officetree.network
+
+import com.officetree.model.*
+import retrofit2.Call
+import retrofit2.http.*
+
+
+//interface Api {
+//    @POST("login")
+//
+//   /* suspend fun login(
+//        @Field("Username") userName: String?,
+//        @Field("password") password: String?,
+////        @Field("device_token") deviceToken: String?,
+////        @Field("device_type") deviceType: String?,
+////        @Field("os_version") osVersion: String?,
+////        @Field("app_version") appVersion: String?,
+////        @Field("appbuild_version") buildVersion: String?
+//    ): Response<CommonResponse<OfficeTreeUser>>*/
+//}
+
+interface Api {
+    //    @POST("login")
+
+//    fun login(@Body body: String?): Call<CommonResponse<OfficeTreeUser>>?
+
+    @POST("login")
+    fun login(@Body requestData: RequestData?): Call<CommonResponse<OfficeTreeUser>?>?
+
+    /* @GET("getextensions")
+     suspend fun getExtension(@Query("WorkerID") workId: Int): Response<CommonListResponse<Extension>>*/
+
+    @GET("getextensions")
+     fun getExtension(@Query("WorkerID") workId: Int): Call<CommonListResponse<ExtensionData>?>?
+}
