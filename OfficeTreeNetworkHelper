@@ -1,0 +1,38 @@
+package com.officetree.network
+
+import android.util.Log
+import com.officetree.pref
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+object NetworkHelper {
+    private const val baseUrl = "https://appphone.officetree.work/api/softphones/v1/"
+
+    private val instance: Retrofit
+        get() = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(
+                OkHttpClient.Builder()
+                    .addInterceptor {
+//                        return@addInterceptor if (pref.user != null) {
+                            Log.e("Authorization","${pref.deviceToken}")
+                            val newRequest = it.request().newBuilder()
+                                //.addHeader("token", "${pref.user?.token}")
+                                .addHeader("Authorization","${pref.deviceToken}")
+                                .build()
+                            it.proceed(newRequest)
+//                        } else {
+//                            it.proceed(it.request().newBuilder().build())
+//                        }
+                    }
+                    .addInterceptor(
+                        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+                    ).build()
+            )
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+    val api: Api get() = instance.create(Api::class.java)
+}
