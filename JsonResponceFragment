@@ -1,0 +1,112 @@
+package com.officetree.fragment
+
+import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import com.officetree.base.BaseFragment
+import com.officetree.databinding.FragmentJsonResponceBinding
+import com.officetree.model.CommonListResponse
+import com.officetree.model.ExtensionData
+import com.officetree.network.NetworkHelper.api
+import com.officetree.pref
+import com.officetree.utils.Utils
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+
+class JsonResponceFragment : BaseFragment() {
+    lateinit var binding: FragmentJsonResponceBinding
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentJsonResponceBinding.inflate(inflater, container, false)
+        return binding.root
+
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+//        Log.e( "onViewCreated: >>>>", pref.user!!.userName!! )
+        binding.textViewResponse.text = pref.responseString
+        binding.textViewOtherResponse.movementMethod = ScrollingMovementMethod()
+
+        binding.buttonApi.setOnClickListener {
+
+            getExtensionList()
+            binding.textViewOtherResponse.text = pref.otherResponceString
+
+            //Toast.makeText(requireContext(), "hello", Toast.LENGTH_SHORT).show()
+//            getExtentionList()
+        }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        pref.responseString = ""
+        // pref.otherResponceString = ""
+    }
+
+    private fun getExtensionList() {
+        if (Utils.isInternetAvailable(requireContext())) {
+            var hashMap: HashMap<String, String> = HashMap<String, String>()
+            hashMap.put("Authorization", pref.deviceToken.toString())
+//            CoroutineScope(Dispatchers.Main).launch {
+            val useCall: Call<CommonListResponse<ExtensionData>?>? = api.getExtension(363)
+            useCall!!.enqueue(object : Callback<CommonListResponse<ExtensionData>?> {
+                override fun onResponse(
+                    call: Call<CommonListResponse<ExtensionData>?>,
+                    response: Response<CommonListResponse<ExtensionData>?>
+                ) {
+                    if (response.code() == 200) {
+                        Log.e(">>> Extentation200", "onResponse: ${response.body()}")
+                        pref.otherResponceString = response.body().toString()
+                    }
+
+
+                    Log.e("Extentation", "onResponse:${response.body()} ")
+//                    pref.otherResponceString = response.body().toString()
+                }
+
+                override fun onFailure(
+                    call: Call<CommonListResponse<ExtensionData>?>,
+                    t: Throwable) {
+                    Log.e("Extenuation Fail", "onResponse:${t.message} ")
+                }
+
+            })
+//            }
+        }
+    }
+
+    /* private fun getExtentionList() {
+         if (Utils.isInternetAvailable(requireContext())) {
+             CoroutineScope(Dispatchers.Main).launch {
+                 val extension: Response<CommonListResponse<Extension>> =
+                     NetworkHelper.api.getExtension(workId = 363)
+                 if (extension.body() != null) {
+                     Log.e("getExtentionList: ", extension.body().toString());
+                 }
+                 Log.e("getExtentionList null: ", extension.body().toString());
+             }
+         } else {
+ //            progressLoader.visibility = View.GONE
+             val snack: Snackbar =
+                 Snackbar.make(
+                     binding.root,
+                     "No internet connection",
+                     Snackbar.LENGTH_LONG
+                 )
+
+             val snackView = snack.view
+             snackView.setBackgroundColor(Color.RED)
+             snack.show()
+         }
+
+     }*/
+}
