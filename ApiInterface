@@ -1,0 +1,7 @@
+interface ApiInterface {
+    @GET("/get_memes")
+    suspend fun getJokes(): Response<Jokes>
+
+    @GET("/quotes")
+    suspend fun getQuotes(): Response<QuoteList>
+}
