@@ -1,0 +1,24 @@
+package com.jigarprajapati.kotlin
+
+import android.app.Application
+import com.jigarprajapati.kotlin.api.ApiInterface
+import com.jigarprajapati.kotlin.api.ApiUtilities
+import com.jigarprajapati.kotlin.repository.MemesRepository
+import com.jigarprajapati.kotlin.room.MemesDatabase
+
+class MyApplication : Application() {
+
+    lateinit var memesRepository: MemesRepository
+    override fun onCreate() {
+
+        // get Instance From Retrofit
+        val apiInterFace = ApiUtilities.getInstance().create(ApiInterface::class.java)
+
+        val database = MemesDatabase.getDatabase(applicationContext)
+        // Initialize the Repository Class
+        memesRepository = MemesRepository(apiInterFace, database, applicationContext)
+
+
+        super.onCreate()
+    }
+}
