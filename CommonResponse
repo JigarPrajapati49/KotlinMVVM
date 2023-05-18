@@ -1,0 +1,27 @@
+package com.officetree.model
+
+import com.google.gson.annotations.SerializedName
+
+data class CommonResponse<T>(
+    //  @SerializedName("success") val isSuccess: Map<String, Any>? = null,
+    @SerializedName("status") val status: Int? = null,
+    //@SerializedName("is_assign") val isAssign: Int? = null,
+    @SerializedName("data") val response: T? = null
+)
+
+data class CommonErrorResponse(
+    @SerializedName("success")
+    val isSuccess: Boolean? = null, @SerializedName("status")
+    val status: Int? = null, @SerializedName("message")
+    val message: String? = null
+)
+
+data class CommonListResponse<T>(
+    //  @SerializedName("success") val isSuccess: Boolean? = null,
+    @SerializedName("status") val status: Int? = null,
+    // @SerializedName("message") val message: String? = "",
+    // @SerializedName("per_page_count") val pageCount: Int? = 0,
+    // @SerializedName("total_count") val totalCount: Int? = 0,
+    //@SerializedName("notification_count") val notificationCount: Int? = 0,
+    @SerializedName("data") val response: List<T>? = null
+)
