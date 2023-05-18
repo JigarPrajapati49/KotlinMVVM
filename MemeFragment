@@ -1,0 +1,72 @@
+package com.jigarprajapati.kotlin.fragment
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.jigarprajapati.kotlin.MyApplication
+import com.jigarprajapati.kotlin.adapter.MemesAdapter
+import com.jigarprajapati.kotlin.databinding.FragmentMemeBinding
+import com.jigarprajapati.kotlin.model.Memes
+import com.jigarprajapati.kotlin.viewmodel.MemesViewModel
+import com.jigarprajapati.kotlin.viewmodel.MemesViewModelFactory
+
+
+class MemeFragment : Fragment() {
+
+    private var _binding: FragmentMemeBinding? = null
+    private val binding get() = _binding!!
+
+    var memesList: MutableList<Memes> = ArrayList()
+    private var quotesAdapter: MemesAdapter? = null
+    private lateinit var memesViewModel: MemesViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentMemeBinding.inflate(inflater, container, false)
+
+
+        // Create Object For Repository
+        val repository = (requireActivity().application as MyApplication).memesRepository
+
+        // Initialize The ViewModel Class As ViewModel Factory
+        memesViewModel = ViewModelProvider(this, MemesViewModelFactory(repository))[MemesViewModel::class.java]
+
+        binding.memesRV.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        quotesAdapter = MemesAdapter(requireContext(), memesList)
+        binding.memesRV.adapter = quotesAdapter
+
+        // get the Data From ViewModel Get the Live Data and Observe the Data
+        memesViewModel.memes.observe(viewLifecycleOwner) { it ->
+            memesList.addAll(it.data!!.memes)
+            quotesAdapter!!.notifyDataSetChanged()
+            Toast.makeText(requireContext(), "${it.data!!.memes.size}", Toast.LENGTH_LONG).show()
+            it.data!!.memes.iterator().forEach {
+                Log.e("MemesActivity", "onCreate: ${it.name}\n image : ${it.url}")
+            }
+        }
+
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+}
