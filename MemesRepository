@@ -1,0 +1,58 @@
+package com.jigarprajapati.kotlin.repository
+
+import android.content.Context
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.jigarprajapati.kotlin.Utils
+import com.jigarprajapati.kotlin.api.ApiInterface
+import com.jigarprajapati.kotlin.model.Data
+import com.jigarprajapati.kotlin.model.Jokes
+import com.jigarprajapati.kotlin.model.QuoteList
+import com.jigarprajapati.kotlin.room.MemesDatabase
+
+class MemesRepository(
+    private val apiInterface: ApiInterface,
+    private val memesDatabase: MemesDatabase,
+    private val applicationContext: Context
+) {
+    // 2 Step Create Repository And Create Live Data
+    private val memesLiveData = MutableLiveData<Jokes>()
+    private val quotesLiveData = MutableLiveData<QuoteList>()
+
+    val memes: LiveData<Jokes>
+        get() = memesLiveData
+
+    val quotes: LiveData<QuoteList>
+        get() = quotesLiveData
+
+
+    suspend fun getMemes() {
+        if (Utils.checkForInternet(applicationContext)) {
+            // get the Jokes From Interface
+            val result = apiInterface.getJokes()
+            Log.e("getMemesData", "getMemes: ${result.body()!!.data!!.memes}")
+
+            if (result.body() != null) {
+                memesDatabase.memeDao().insertMeme(result.body()!!.data!!.memes)
+                memesLiveData.postValue(result.body())
+            }
+        } else {
+            val memes = memesDatabase.memeDao().getMemes()
+            val memeList = Jokes(true, Data(memes))
+            memesLiveData.postValue(memeList)
+        }
+
+    }
+
+    suspend fun getQuotes() {
+        val result = apiInterface.getQuotes()
+        if (result.body() != null) {
+            val quotes = result.body()
+            Log.d("QuestList: ", quotes!!.toString())
+            quotesLiveData.postValue(result.body())
+        } else {
+            Log.e("TAG", "getQuotes: Fail")
+        }
+    }
+}
