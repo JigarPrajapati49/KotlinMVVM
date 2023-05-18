@@ -1,0 +1,18 @@
+object ApiUtilities {
+
+    val BASE_URL = "https://api.imgflip.com/"
+    val BASE_QUOTES_URL = "https://quotable.io/"
+
+    fun getInstance(): Retrofit {
+        return Retrofit.Builder().baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+    fun getInstances(): Retrofit {
+        return Retrofit.Builder().baseUrl(BASE_QUOTES_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+
+}
