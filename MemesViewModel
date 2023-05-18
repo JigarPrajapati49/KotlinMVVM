@@ -1,0 +1,36 @@
+package com.jigarprajapati.kotlin.viewmodel
+
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.jigarprajapati.kotlin.model.Jokes
+import com.jigarprajapati.kotlin.model.QuoteList
+import com.jigarprajapati.kotlin.model.Results
+import com.jigarprajapati.kotlin.repository.MemesRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class MemesViewModel(private val memesRepository: MemesRepository) : ViewModel() {
+
+
+    // get all the Data From Repository Example : Live Data and Function
+    // 3 Step Create ViewModel Class For MVVM Structure
+    // create Object Of Repository Class In Parameter
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            // get the Meme From Repository
+            // get the Data From Repository From Api
+            memesRepository.getMemes()
+            memesRepository.getQuotes()
+        }
+    }
+
+    // get The live Data From Repository
+    val memes : LiveData<Jokes>
+    get() = memesRepository.memes
+
+    val quotes : LiveData<QuoteList>
+    get() = memesRepository.quotes
+
+}
